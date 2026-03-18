@@ -1,0 +1,116 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String   @id @default(cuid())
+  username     String   @unique
+  fullName     String
+  email        String   @unique
+  password     String
+  role         String   @default("CASHIER") // Changed from enum to string
+  profileImage String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  
+  shifts       Shift[]
+  orders       Order[]
+  
+  @@map("users")
+}
+
+model Product {
+  id          String   @id @default(cuid())
+  name        String
+  price       Float
+  category    String
+  description String?
+  stock       Int      @default(0)
+  image       String?
+  tags        String   @default("[]") // Store as JSON string
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  orderItems  OrderItem[]
+  
+  @@map("products")
+}
+
+model Shift {
+  id         String   @id @default(cuid())
+  userId     String
+  startTime  DateTime @default(now())
+  endTime    DateTime?
+  status     String   @default("ACTIVE") // Changed from enum to string
+  totalSales Float    @default(0)
+  ordersCount Int     @default(0)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  orders     Order[]
+  
+  @@map("shifts")
+}
+
+model Order {
+  id            String   @id @default(cuid())
+  shiftId       String
+  userId        String
+  subtotal      Float
+  tax           Float
+  total         Float
+  paymentMethod String   @default("CASH") // Changed from enum to string
+  timestamp     DateTime @default(now())
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  shift         Shift    @relation(fields: [shiftId], references: [id], onDelete: Cascade)
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items         OrderItem[]
+  
+  @@map("orders")
+}
+
+model OrderItem {
+  id        String   @id @default(cuid())
+  orderId   String
+  productId String
+  quantity  Int
+  price     Float    // Store price at time of sale
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  
+  @@map("order_items")
+}
+
+model Setting {
+  id          String   @id @default("1") // Singleton pattern
+  shopName    String   @default("My Shop")
+  address     String   @default("")
+  phone       String   @default("")
+  email       String   @default("")
+  vatRate     Float    @default(16.0)
+  vatInclusive Boolean @default(false)
+  currency    String   @default("KES")
+  logo        String?
+  
+  // Alert Settings
+  enableLowStockAlerts Boolean @default(true)
+  lowStockThreshold    Int     @default(5)
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@map("settings")
+}
+
+// Removed all enum definitions since SQLite doesn't support them

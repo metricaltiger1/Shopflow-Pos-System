@@ -1,0 +1,88 @@
+{
+  "name": "mama-liam-fries-desktop",
+  "version": "1.0.0",
+  "description": "Desktop app for Mama Liam Fries",
+  "main": "electron/src/main.js",
+  "scripts": {
+    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\" \"wait-on http://localhost:3000 && npm run dev:electron\"",
+    "dev:backend": "cd backend && npm run dev",
+    "dev:frontend": "cd frontend && npm run dev",
+    "dev:electron": "electron .",
+    "prepack": "npm run build:prisma && npm run build:backend && npm run build:frontend",
+    "pack": "electron-builder --dir",
+    "predist": "npm run build:prisma && npm run build:backend && npm run build:frontend",
+    "dist": "electron-builder",
+    "build": "npm run build:prisma && npm run build:backend && npm run build:frontend && npm run build:electron",
+    "build:prisma": "node scripts/build-prisma.js",
+    "build:backend": "cd backend && npm run build",
+    "build:frontend": "cd frontend && npm run build",
+    "build:electron": "electron-builder",
+    "postinstall": "cd backend && npm install && cd ../frontend && npm install"
+  },
+  "keywords": ["restaurant", "pos", "desktop"],
+  "author": "Okumu Christopher",
+  "license": "MIT",
+  "devDependencies": {
+    "concurrently": "^8.2.0",
+    "electron": "^22.0.0",
+    "electron-builder": "^24.0.0",
+    "wait-on": "^7.0.1"
+  },
+  "build": {
+    "appId": "com.yourcompany.mama-liam-fries",
+    "productName": "Mama Liam Fries",
+    "directories": {
+      "output": "electron/build"
+    },
+    "files": [
+      "electron/src/**/*",
+      "frontend/dist/**/*"
+    ],
+    "extraResources": [
+      {
+        "from": "backend",
+        "to": "backend",
+        "filter": [
+          "**/*",
+          "!src/**/*",
+          "!tsconfig.json",
+          "!.eslintrc.js",
+          "!node_modules/.bin/**/*",
+          "!node_modules/**/*.d.ts",
+          "!node_modules/**/*.map",
+          "!node_modules/**/test/**/*",
+          "!node_modules/**/tests/**/*"
+        ]
+      },
+      {
+        "from": "backend/data",
+        "to": "backend/data"
+      },
+      {
+        "from": "backend/prisma",
+        "to": "backend/prisma"
+      },
+      {
+        "from": "backend/node_modules/.prisma",
+        "to": "backend/node_modules/.prisma",
+        "filter": ["**/*"]
+      }
+    ],
+    "mac": {
+      "icon": "electron/icons/icon.icns",
+      "category": "public.app-category.food-and-drink"
+    },
+    "win": {
+      "icon": "electron/icons/icon.ico",
+      "target": "nsis"
+    },
+    "linux": {
+      "icon": "electron/icons/icon.png",
+      "target": "AppImage"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true
+    }
+  }
+}
